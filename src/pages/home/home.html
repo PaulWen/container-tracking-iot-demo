@@ -1,0 +1,58 @@
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>
+      Container Tracker IoT Device
+    </ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-grid>
+
+    <ion-row>
+      <ion-col>
+        <ion-card>
+
+          <ion-card-header>
+            <strong>Device Configuration</strong>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-item>
+              <ion-label color="primary" floating>Organization</ion-label>
+              <ion-input type="text" [(ngModel)]="organisation"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label color="primary" floating>Device Type</ion-label>
+              <ion-input type="text" [(ngModel)]="deviceType"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label color="primary" floating>Device ID</ion-label>
+              <ion-input type="text" [(ngModel)]="deviceId"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label color="primary" floating>Authentication Token</ion-label>
+              <ion-input type="text" [(ngModel)]="authenticationToken"></ion-input>
+            </ion-item>
+
+          </ion-card-content>
+
+        </ion-card>
+
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <button ion-button full (click)="openSensorPage()" [disabled]="organisation == '' || deviceType == '' || deviceId == '' || authenticationToken == ''">Start Tracking</button>
+    </ion-row>
+
+  </ion-grid>
+
+</ion-content>
