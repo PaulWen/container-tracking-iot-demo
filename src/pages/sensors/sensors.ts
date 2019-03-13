@@ -52,6 +52,23 @@ export class SensorsPage {
   private image: string;
 
 
+  private cameraPreviewOpts: CameraPreviewOptions = {
+    x: 0,
+    y: 0,
+    width: window.screen.width,
+    height: window.screen.height,
+    camera: this.cameraPreview.CAMERA_DIRECTION.BACK,
+    toBack: true,
+    tapPhoto: false,
+    previewDrag: false
+  };
+
+  private pictureOpts: CameraPreviewPictureOptions = {
+    width: 600,
+    height: 600,
+    quality: 30
+  };
+
   constructor(public navCtrl: NavController, public navParams: NavParams, private http: HttpClient, private deviceMotion: DeviceMotion, private gyroscope: Gyroscope, private geolocation: Geolocation, private cameraPreview: CameraPreview, private storage: Storage, private insomnia: Insomnia) {
     // Build up device config object - therefore, load the config data
     let config = {
@@ -90,36 +107,52 @@ export class SensorsPage {
   private ionViewDidLoad() {
     // let the app stay awake
     this.insomnia.keepAwake().then(
-        () => Logger.log('Stays awake.'),
-        (error) => Logger.error(error)
+      () => Logger.log('Stays awake.'),
+      (error) => Logger.error(error)
     );
 
     // connect device with IoT Platform
     Logger.log("Trys to connect to Watson IoT Platform!");
     this.iotDevice.connect();
 
-    // wait until connected and start publishing data afterwards
+    // wait until connected
     this.iotDevice.on("connect", () => {
       Logger.log("connected to IoT Platform");
 
-      // update the device data in a specific interval
-      this.updateInterval = setInterval(() => {
-        // update all the data
-        this.updateAllData();
+      // start the camera preview and wait until it opened
+      Logger.log("Trys to open up the camera preview.");
+      this.cameraPreview.startCamera(this.cameraPreviewOpts).then((response) => {
+        console.log("camera running!" + response);
 
-        // send data to the IoT platform
-        this.sendStatusToIotPlatform(this.accelerationX, this.accelerationY, this.accelerationZ, this.accelerationTime, this.gyroscopeX, this.gyroscopeY, this.gyroscopeZ, this.gyroscopeTime, this.geolocationLatitude, this.geolocationLongitude, this.geolocationTime);
-      }, 500);
-      Logger.log("Started Tracking!");
+        // wait just a little bit longer in order to give the camera enough time to start
+        // this is needed because of a bug in the "cordova-plugin-camera-preview" plugin
+        setTimeout(() => {
+          // turn the flash on
+          this.cameraPreview.setFlashMode(this.cameraPreview.FLASH_MODE.ON);
+
+          // update the device data in a specific interval
+          this.updateInterval = setInterval(() => {
+            // update all the data
+            this.updateAllData();
+
+            // send data to the IoT platform
+            this.sendStatusToIotPlatform(this.accelerationX, this.accelerationY, this.accelerationZ, this.accelerationTime, this.gyroscopeX, this.gyroscopeY, this.gyroscopeZ, this.gyroscopeTime, this.geolocationLatitude, this.geolocationLongitude, this.geolocationTime);
+          }, 500);
+          Logger.log("Started Tracking!");
+        }, 5000);
+      }).catch(error => {
+        console.log("Could not access camera: " + error);
+      });
+
     });
 
     // listen to commands send to this device for execution
-    this.iotDevice.on("command", (commandName,format,payload,topic) => {
+    this.iotDevice.on("command", (commandName, format, payload, topic) => {
       // if the command is "takePicture"
-      if(commandName === "takePicture") {
+      if (commandName === "takePicture") {
         this.handelTakePictureCommand();
 
-      // if the command is unknown then throw an exception
+        // if the command is unknown then throw an exception
       } else {
         Logger.error("Command not supported: " + commandName);
       }
@@ -146,6 +179,9 @@ export class SensorsPage {
 
     // disconnect device from IoT platform
     this.iotDevice.disconnect();
+
+    // stop the camera preview
+    this.cameraPreview.stopCamera();
   }
 
 
@@ -210,9 +246,9 @@ export class SensorsPage {
         this.accelerationTime = acceleration.timestamp;
 
         Logger.log("Acceleration - /n" +
-                   "x: " + acceleration.x +
-                   "y: " + acceleration.y +
-                   "z: " + acceleration.z);
+          "x: " + acceleration.x +
+          "y: " + acceleration.y +
+          "z: " + acceleration.z);
       }, (error: any) => Logger.error(error)
     );
   }
@@ -233,9 +269,9 @@ export class SensorsPage {
         this.gyroscopeTime = orientation.timestamp;
 
         Logger.log("Orientation - /n" +
-                   "x: " + orientation.x +
-                   "y: " + orientation.y +
-                   "z: " + orientation.z);
+          "x: " + orientation.x +
+          "y: " + orientation.y +
+          "z: " + orientation.z);
       }
     ).catch((error: any) => {
       Logger.error(JSON.stringify(error));
@@ -252,8 +288,8 @@ export class SensorsPage {
       this.geolocationTime = geoposition.timestamp;
 
       Logger.log("Geolocation - /n" +
-                 "geolocationLatitude: " + geoposition.coords.latitude +
-                 "geolocationLongitude: " + geoposition.coords.longitude);
+        "geolocationLatitude: " + geoposition.coords.latitude +
+        "geolocationLongitude: " + geoposition.coords.longitude);
     }).catch((error: any) => {
       Logger.error(error);
     });
@@ -266,65 +302,28 @@ export class SensorsPage {
    *
    * This method uses the camera-preview plugin to automatically take a picture with the device camera.
    * https://github.com/cordova-plugin-camera-preview/
-   *
-   * Caution: There is currently a bug in the cordova-plugin-camera-preview which causes this function to be really slow
-   * on an iOS device!
    */
   private handelTakePictureCommand() {
     // ############# 1. Take the picture #############
-    // options to configure the camera preview
-    let cameraPreviewOpts: CameraPreviewOptions = {
-      x: 0,
-      y: 0,
-      width: window.screen.width,
-      height: window.screen.height,
-      camera: this.cameraPreview.CAMERA_DIRECTION.BACK,
-      toBack: true,
-      tapPhoto: false,
-      previewDrag: false
-    };
+    // take the picture
+    this.cameraPreview.takePicture(this.pictureOpts).then((base64PictureData) => {
+      Logger.log("took picture successfully");
+      // save the picture as base64 encoded string
+      this.image = "data:image/jpeg;base64," + base64PictureData;
 
-    //options to configure how the picture should be taken
-    let pictureOpts: CameraPreviewPictureOptions = {
-      width: 600,
-      height: 600,
-      quality: 30
-    };
-
-    // start the camera preview
-    this.cameraPreview.startCamera(cameraPreviewOpts).then((response) => {
-      console.log("camera running!" + response);
-
-      // wait just a little bit longer in order to give the camera enough time to start
-      // this is needed because of a bug in the "cordova-plugin-camera-preview" plugin
-      setTimeout(() => {
-        Logger.log("Try to take picture.");
-        // turn the flash on
-        this.cameraPreview.setFlashMode(this.cameraPreview.FLASH_MODE.ON);
-
-        // take the picture
-        this.cameraPreview.takePicture(pictureOpts).then((base64PictureData) => {
-          Logger.log("took picture successfully");
-          // save the picture as base64 encoded string
-          this.image = "data:image/jpeg;base64," + base64PictureData;
-          // stop the camera preview
-          this.cameraPreview.stopCamera();
-
-          // ############# 2. Upload the picture #############
-          this.http.post(this.uploadUrl, {"deviceId": this.navParams.get('id'), "image": this.image}).subscribe(
-            // Successful responses call the first callback.
-            (data) => {Logger.log("Image uploaded successfully.")},
-            // Errors will call this callback instead:
-            (err) => {
-              Logger.error('Something went wrong while uploading the image!' + JSON.stringify(err));
-            }
-          );
-        }, (error: any) => {
-          Logger.error(error);
-        });
-      }, 5000);
-    }).catch(error => {
-      console.log("could not access camera: " + error);
+      // ############# 2. Upload the picture #############
+      this.http.post(this.uploadUrl, {"deviceId": this.navParams.get('id'), "image": this.image}).subscribe(
+        // Successful responses call the first callback.
+        (data) => {
+          Logger.log("Image uploaded successfully.")
+        },
+        // Errors will call this callback instead:
+        (err) => {
+          Logger.error('Something went wrong while uploading the image!' + JSON.stringify(err));
+        }
+      );
+    }, (error: any) => {
+      Logger.error(error);
     });
   }
 
