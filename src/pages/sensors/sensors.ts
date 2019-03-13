@@ -30,6 +30,8 @@ import {Insomnia} from "@ionic-native/insomnia";
 })
 export class SensorsPage {
 
+  private uploadUrl: string;
+
   private iotDevice: any;
   private updateInterval: any;
 
@@ -53,12 +55,13 @@ export class SensorsPage {
   constructor(public navCtrl: NavController, public navParams: NavParams, private http: HttpClient, private deviceMotion: DeviceMotion, private gyroscope: Gyroscope, private geolocation: Geolocation, private cameraPreview: CameraPreview, private storage: Storage, private insomnia: Insomnia) {
     // Build up device config object - therefore, load the config data
     let config = {
-      "org": this.navParams.get('org'),
-      "id": this.navParams.get('id'),
-      "type": this.navParams.get('type'),
+      "org": this.navParams.get(AppConfig.STORAGE_KEY_ORGANISATION),
+      "id": this.navParams.get(AppConfig.STORAGE_KEY_DEVICE_ID),
+      "type": this.navParams.get(AppConfig.STORAGE_KEY_DEVICE_TYPE),
       "auth-method": AppConfig.IBM_IOT_PLATFORM_AUTHENTICATION_MODE,
-      "auth-token": this.navParams.get('auth-token')
+      "auth-token": this.navParams.get(AppConfig.STORAGE_KEY_AUTHENTICATION_TOKEN)
     };
+    this.uploadUrl = this.navParams.get(AppConfig.STORAGE_UPLOAD_URL);
 
     // Create IoT device object
     this.iotDevice = new IbmIot.IotfDevice(config);
@@ -308,12 +311,12 @@ export class SensorsPage {
           this.cameraPreview.stopCamera();
 
           // ############# 2. Upload the picture #############
-          this.http.post(AppConfig.URL_NODE_RED_SERVER + "image-upload", {"deviceId": this.navParams.get('id'), "image": this.image}).subscribe(
+          this.http.post(this.uploadUrl, {"deviceId": this.navParams.get('id'), "image": this.image}).subscribe(
             // Successful responses call the first callback.
             (data) => {Logger.log("Image uploaded successfully.")},
             // Errors will call this callback instead:
             (err) => {
-              Logger.error('Something went while uploading the image!' + JSON.stringify(err));
+              Logger.error('Something went wrong while uploading the image!' + JSON.stringify(err));
             }
           );
         }, (error: any) => {

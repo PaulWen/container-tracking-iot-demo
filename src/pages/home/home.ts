@@ -20,6 +20,7 @@ export class HomePage {
   private deviceType: string;
   private deviceId: string;
   private authenticationToken: string;
+  private uploadUrl: string;
 
   constructor(public navCtrl: NavController, private storage: Storage) {
     // read configuration from the storage or set it to undefined
@@ -51,6 +52,13 @@ export class HomePage {
         this.authenticationToken = "";
       }
     });
+    this.storage.get(AppConfig.STORAGE_UPLOAD_URL).then((value: string) => {
+      if (value != null) {
+        this.uploadUrl = value;
+      } else {
+        this.uploadUrl = "https://container-tracker-dashboard.mybluemix.net/image-upload";
+      }
+    });
   }
 
   /**
@@ -63,15 +71,17 @@ export class HomePage {
     this.storage.set(AppConfig.STORAGE_KEY_DEVICE_TYPE, this.deviceType);
     this.storage.set(AppConfig.STORAGE_KEY_DEVICE_ID, this.deviceId);
     this.storage.set(AppConfig.STORAGE_KEY_AUTHENTICATION_TOKEN, this.authenticationToken);
-
+    this.storage.set(AppConfig.STORAGE_UPLOAD_URL, this.uploadUrl);
 
     // build up payload to pass to the sensor page
-    let payload: any = {
-      "org": this.organisation,
-      "id": this.deviceId,
-      "type": this.deviceType,
-      "auth-token": this.authenticationToken
-    };
+    let payload: any = {};
+
+    payload[AppConfig.STORAGE_KEY_ORGANISATION] = this.organisation;
+    payload[AppConfig.STORAGE_KEY_DEVICE_ID] = this.deviceId;
+    payload[AppConfig.STORAGE_KEY_DEVICE_TYPE] = this.deviceType;
+    payload[AppConfig.STORAGE_KEY_AUTHENTICATION_TOKEN] = this.authenticationToken;
+    payload[AppConfig.STORAGE_UPLOAD_URL] = this.uploadUrl;
+
     // call the sensor page to start the tracking
     this.navCtrl.push(SensorsPage, payload);
   }

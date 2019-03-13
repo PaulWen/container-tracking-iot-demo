@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="wenzel.paul" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="wenzel.paul.containertracker" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>ContainerTracker</name>
     <description>An awesome Ionic/Cordova app.</description>
     <author email="wenzel.paul@web.de" href="http://ionicframework.com/">Ionic Framework Team</author>
@@ -86,8 +86,8 @@
     <allow-navigation href="http://169.254.244.26:8100" />
     <allow-navigation href="http://169.254.127.250:8100" />
     <allow-navigation href="http://169.254.117.24:8100" />
-    <engine name="ios" spec="4.5.4" />
     <engine name="android" spec="6.3.0" />
+    <engine name="ios" spec="~4.5.5" />
     <plugin name="cordova-plugin-device-motion" spec="^1.2.5" />
     <plugin name="cordova-plugin-gyroscope" spec="^0.1.4" />
     <plugin name="cordova-plugin-geolocation" spec="^3.0.0">

@@ -42,6 +42,11 @@
               <ion-input type="text" [(ngModel)]="authenticationToken"></ion-input>
             </ion-item>
 
+            <ion-item>
+              <ion-label color="primary" floating>Image Upload URL</ion-label>
+              <ion-input type="text" [(ngModel)]="uploadUrl"></ion-input>
+            </ion-item>
+
           </ion-card-content>
 
         </ion-card>
@@ -50,7 +55,7 @@
     </ion-row>
 
     <ion-row>
-      <button ion-button full (click)="openSensorPage()" [disabled]="organisation == '' || deviceType == '' || deviceId == '' || authenticationToken == ''">Start Tracking</button>
+      <button ion-button full (click)="openSensorPage()" [disabled]="organisation == '' || deviceType == '' || deviceId == '' || authenticationToken == '' || uploadUrl == ''">Start Tracking</button>
     </ion-row>
 
   </ion-grid>

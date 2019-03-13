@@ -21,6 +21,9 @@ export class AppConfig {
   public static get STORAGE_KEY_AUTHENTICATION_TOKEN(): string {
     return "authenticationToken";
   };
+  public static get STORAGE_UPLOAD_URL(): string {
+    return "uploadUrl";
+  };
 
   public static get IBM_IOT_PLATFORM_AUTHENTICATION_MODE(): string {
     return "token";
@@ -29,9 +32,5 @@ export class AppConfig {
   public static get LOREM_IPSUM(): string {
     return "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
   };
-
-  public static get URL_NODE_RED_SERVER(): string {
-    return "https://container-tracker-dashboard.mybluemix.net/";
-  }
 
 }
