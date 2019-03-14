@@ -312,7 +312,7 @@ export class SensorsPage {
       this.image = "data:image/jpeg;base64," + base64PictureData;
 
       // ############# 2. Upload the picture #############
-      this.http.post(this.uploadUrl, {"deviceId": this.navParams.get('id'), "image": this.image}).subscribe(
+      this.http.post(this.uploadUrl, {"deviceId": this.navParams.get(AppConfig.STORAGE_KEY_DEVICE_ID), "image": this.image}).subscribe(
         // Successful responses call the first callback.
         (data) => {
           Logger.log("Image uploaded successfully.")
